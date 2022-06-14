@@ -85,6 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Container(),
               flex: 2,
             ),
+            //transitioning to sign up
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               Container(
                 child: const Text("Don't have an account?"),
@@ -107,7 +108,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ])
-            //transitioning to sign up
           ],
         ),
       )),

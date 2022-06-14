@@ -1,6 +1,11 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:instagram_flutter_2/resources/auth_methods.dart';
 import 'package:instagram_flutter_2/utils/colors.dart';
+import 'package:instagram_flutter_2/utils/utils.dart';
 import 'package:instagram_flutter_2/widgets/text_field_input.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -15,6 +20,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _bioController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
+  Uint8List? _image;
 
   @override
   void dispose() {
@@ -25,9 +31,17 @@ class _SignupScreenState extends State<SignupScreen> {
     _usernameController.dispose();
   }
 
+  void selectImage() async {
+    Uint8List im = await pickImage(ImageSource.gallery);
+    setState(() {
+      _image = im;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
           child: Container(
         padding: EdgeInsets.symmetric(horizontal: 32),
@@ -50,16 +64,21 @@ class _SignupScreenState extends State<SignupScreen> {
             ),
             //circular widget to accept and show our selected file
             Stack(children: [
-              const CircleAvatar(
-                radius: 64,
-                backgroundImage: NetworkImage(
-                    "https://images.unsplash.com/photo-1592385672401-ab91fccb6fd5?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80"),
-              ),
+              _image != null
+                  ? CircleAvatar(
+                      radius: 64,
+                      backgroundImage: MemoryImage(_image!),
+                    )
+                  : const CircleAvatar(
+                      radius: 64,
+                      backgroundImage: NetworkImage(
+                          "https://icon-library.com/images/default-profile-icon/default-profile-icon-24.jpg"),
+                    ),
               Positioned(
                 bottom: -10,
                 left: 80,
                 child: IconButton(
-                  onPressed: () {},
+                  onPressed: selectImage,
                   icon: const Icon(Icons.add_a_photo),
                 ),
               )
@@ -106,6 +125,16 @@ class _SignupScreenState extends State<SignupScreen> {
             ),
             //signup button
             InkWell(
+              onTap: () async {
+                String res = await AuthMethods().signupUser(
+                  username: _usernameController.text,
+                  bio: _bioController.text,
+                  email: _emailController.text,
+                  password: _passwordController.text,
+                  file: _image!,
+                );
+                print(res);
+              },
               child: Container(
                 child: const Text("Signup"),
                 width: double.infinity,
@@ -118,7 +147,7 @@ class _SignupScreenState extends State<SignupScreen> {
               ),
             ),
             const SizedBox(
-              height: 12,
+              height: 11,
             ),
             Flexible(
               child: Container(),
@@ -126,7 +155,7 @@ class _SignupScreenState extends State<SignupScreen> {
             ),
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               Container(
-                child: const Text("Don't have an account?"),
+                child: const Text("Already have an account?"),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 8,
                 ),
@@ -135,7 +164,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 onTap: () {},
                 child: Container(
                   child: const Text(
-                    "Sign Up",
+                    "Login",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                     ),
