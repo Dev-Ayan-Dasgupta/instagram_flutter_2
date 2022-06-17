@@ -2,8 +2,15 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:instagram_flutter_2/resources/auth_methods.dart';
+import 'package:instagram_flutter_2/screens/signup_screen.dart';
 import 'package:instagram_flutter_2/utils/colors.dart';
+import 'package:instagram_flutter_2/utils/utils.dart';
 import 'package:instagram_flutter_2/widgets/text_field_input.dart';
+
+import '../responsive/mobile_screen_layout.dart';
+import '../responsive/responsive_layout_screen.dart';
+import '../responsive/web_screen_layout.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -15,12 +22,49 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
 
   @override
   void dispose() {
     super.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+  }
+
+  void navigateToSignup() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const SignupScreen(),
+      ),
+    );
+  }
+
+  void loginUser() async {
+    setState(() {
+      _isLoading = true;
+    });
+    String res = await AuthMethods().loginUser(
+        email: _emailController.text, password: _passwordController.text);
+
+    // setState(() {
+    //   _isLoading = false;
+    // });
+
+    if (res == 'success') {
+      //
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+            builder: (context) => const ResponsiveLayout(
+                  webScreenLayout: WebScreenLayout(),
+                  mobileScreenLayout: MobileScreenLayout(),
+                )),
+      );
+    } else {
+      showSnackBar(res, context);
+    }
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   @override
@@ -67,16 +111,24 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             //login button
             InkWell(
-              child: Container(
-                child: const Text("Login"),
-                width: double.infinity,
-                height: 48,
-                alignment: Alignment.center,
-                decoration: const ShapeDecoration(
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(10))),
-                    color: blueColor),
-              ),
+              onTap: loginUser,
+              child: _isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: primaryColor,
+                      ),
+                    )
+                  : Container(
+                      child: const Text("Login"),
+                      width: double.infinity,
+                      height: 48,
+                      alignment: Alignment.center,
+                      decoration: const ShapeDecoration(
+                          shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(10))),
+                          color: blueColor),
+                    ),
             ),
             const SizedBox(
               height: 12,
@@ -94,7 +146,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               GestureDetector(
-                onTap: () {},
+                onTap: navigateToSignup,
                 child: Container(
                   child: const Text(
                     "Sign Up",

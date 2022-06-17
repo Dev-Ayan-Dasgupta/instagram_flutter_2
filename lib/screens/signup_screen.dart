@@ -1,9 +1,14 @@
+//import 'dart:js';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:instagram_flutter_2/resources/auth_methods.dart';
+import 'package:instagram_flutter_2/responsive/mobile_screen_layout.dart';
+import 'package:instagram_flutter_2/responsive/responsive_layout_screen.dart';
+import 'package:instagram_flutter_2/responsive/web_screen_layout.dart';
+import 'package:instagram_flutter_2/screens/login_screen.dart';
 import 'package:instagram_flutter_2/utils/colors.dart';
 import 'package:instagram_flutter_2/utils/utils.dart';
 import 'package:instagram_flutter_2/widgets/text_field_input.dart';
@@ -21,6 +26,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _bioController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   Uint8List? _image;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -31,11 +37,48 @@ class _SignupScreenState extends State<SignupScreen> {
     _usernameController.dispose();
   }
 
+  void navigateToLogin() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const LoginScreen(),
+      ),
+    );
+  }
+
   void selectImage() async {
     Uint8List im = await pickImage(ImageSource.gallery);
     setState(() {
       _image = im;
     });
+  }
+
+  void signUpUser() async {
+    setState(() {
+      _isLoading = true;
+    });
+    String res = await AuthMethods().signupUser(
+      username: _usernameController.text,
+      bio: _bioController.text,
+      email: _emailController.text,
+      password: _passwordController.text,
+      file: _image!,
+    );
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (res != 'success') {
+      showSnackBar(res, context);
+    } else {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+            builder: (context) => const ResponsiveLayout(
+                  webScreenLayout: WebScreenLayout(),
+                  mobileScreenLayout: MobileScreenLayout(),
+                )),
+      );
+    }
   }
 
   @override
@@ -125,26 +168,24 @@ class _SignupScreenState extends State<SignupScreen> {
             ),
             //signup button
             InkWell(
-              onTap: () async {
-                String res = await AuthMethods().signupUser(
-                  username: _usernameController.text,
-                  bio: _bioController.text,
-                  email: _emailController.text,
-                  password: _passwordController.text,
-                  file: _image!,
-                );
-                print(res);
-              },
-              child: Container(
-                child: const Text("Signup"),
-                width: double.infinity,
-                height: 48,
-                alignment: Alignment.center,
-                decoration: const ShapeDecoration(
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(10))),
-                    color: blueColor),
-              ),
+              onTap: signUpUser,
+              child: _isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: primaryColor,
+                      ),
+                    )
+                  : Container(
+                      child: const Text("Signup"),
+                      width: double.infinity,
+                      height: 48,
+                      alignment: Alignment.center,
+                      decoration: const ShapeDecoration(
+                          shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(10))),
+                          color: blueColor),
+                    ),
             ),
             const SizedBox(
               height: 11,
@@ -161,7 +202,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
               ),
               GestureDetector(
-                onTap: () {},
+                onTap: navigateToLogin,
                 child: Container(
                   child: const Text(
                     "Login",
